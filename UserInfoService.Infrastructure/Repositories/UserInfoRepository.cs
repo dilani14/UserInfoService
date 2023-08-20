@@ -19,9 +19,9 @@ namespace UserInfoService.Infrastructure.Repositories
             return await _userInfoDbContext.UserInfo.ToListAsync();
         }
 
-        public async Task<UserInfo?> GetUserInfoByIdAsync(int id)
+        public async Task<string> GetUserNameByIdAsync(int id)
         {
-            return await _userInfoDbContext.UserInfo.FindAsync(id);
+            return await _userInfoDbContext.UserInfo.Where(data => data.Id == id).Select(data => data.Name).FirstAsync();
         }
 
         public async Task<int> AddUserInfoAsync(UserInfo userInfo)
@@ -54,10 +54,14 @@ namespace UserInfoService.Infrastructure.Repositories
             }
         }
 
+        public async Task<bool> IsUserInfoExistsAsync(int id)
+        {
+            return await _userInfoDbContext.UserInfo.AnyAsync(data => data.Id == id);
+        }
+
         public async Task<bool> IsNameExistsAsync(string name)
         {
-            UserInfo? data = await _userInfoDbContext.UserInfo.FirstOrDefaultAsync(data => data.Name == name);
-            return data != null;
+            return await _userInfoDbContext.UserInfo.AnyAsync(data => data.Name == name);
         }
 
         public async Task<bool> IsDifferentDataWithSameNameExistsAsync(string name, int id)

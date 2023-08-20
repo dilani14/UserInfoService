@@ -56,14 +56,19 @@ namespace UserInfoService.Core.Managers
 
         public async Task UpdateUserInfo(AddOrUpdateUserInfoRequest request, int id)
         {
-            if (await _userInfoRepository.GetUserInfoByIdAsync(id) == null)
+            if (await _userInfoRepository.IsUserInfoExistsAsync(id))
             {
                 throw new InValidRequestDataException(INVALID_ID_ERR_MSG, (int)HttpStatusCode.NotFound);
             }
 
-            if (await _userInfoRepository.IsDifferentDataWithSameNameExistsAsync(request.Name, id))
+            string nameBeforeUpdate = await _userInfoRepository.GetUserNameByIdAsync(id);
+            // Check whether name field is getting updated
+            if(nameBeforeUpdate != request.Name)
             {
-                throw new InValidRequestDataException(INVALID_NAME_ERR_MSG, (int)HttpStatusCode.BadRequest);
+                if (await _userInfoRepository.IsNameExistsAsync(request.Name))
+                {
+                    throw new InValidRequestDataException(INVALID_NAME_ERR_MSG, (int)HttpStatusCode.BadRequest);
+                }
             }
 
             UserInfo userInfo = new() { Id = id, Name = request.Name, Address = request.Address };
@@ -74,7 +79,7 @@ namespace UserInfoService.Core.Managers
 
         public async Task DeleteUserInfo(int id)
         {
-            if (await _userInfoRepository.GetUserInfoByIdAsync(id) == null)
+            if (await _userInfoRepository.IsUserInfoExistsAsync(id))
             {
                 throw new InValidRequestDataException(INVALID_ID_ERR_MSG, (int)HttpStatusCode.NotFound);
             }
