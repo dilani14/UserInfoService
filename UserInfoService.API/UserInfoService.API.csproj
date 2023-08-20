@@ -14,4 +14,9 @@
     <Folder Include="Controllers\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\UserInfoService.Core\UserInfoService.Core.csproj" />
+    <ProjectReference Include="..\UserInfoService.Infrastructure\UserInfoService.Infrastructure.csproj" />
+  </ItemGroup>
+
 </Project>
