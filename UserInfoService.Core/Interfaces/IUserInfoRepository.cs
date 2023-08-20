@@ -11,6 +11,5 @@ namespace UserInfoService.Core.Interfaces
         Task DeleteUserInfoAsync(int id);
         Task<bool> IsUserInfoExistsAsync(int id);
         Task<bool> IsNameExistsAsync(string name);
-        Task<bool> IsDifferentDataWithSameNameExistsAsync(string name, int id);
     }
 }

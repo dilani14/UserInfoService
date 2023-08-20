@@ -64,11 +64,5 @@ namespace UserInfoService.Infrastructure.Repositories
             return await _userInfoDbContext.UserInfo.AnyAsync(data => data.Name == name);
         }
 
-        public async Task<bool> IsDifferentDataWithSameNameExistsAsync(string name, int id)
-        {
-            UserInfo? data = await _userInfoDbContext.UserInfo.FirstOrDefaultAsync(data => data.Name == name && data.Id != id);
-            return data != null;
-        }
-
     }
 }
