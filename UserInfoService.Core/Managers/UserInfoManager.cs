@@ -11,15 +11,32 @@ namespace UserInfoService.Core.Managers
         private readonly static string INVALID_ID_ERR_MSG = "The provided Id does not have associated IdentityData. Please provide a valid Id.";
 
         private readonly IUserInfoRepository _userInfoRepository;
+        private readonly ICacheManager<List<UserInfo>> _cacheManager;
 
-        public UserInfoManager(IUserInfoRepository userInfoRepository) 
+        public UserInfoManager(IUserInfoRepository userInfoRepository, ICacheManager<List<UserInfo>> cacheManager)
         {
             _userInfoRepository = userInfoRepository;
+            _cacheManager = cacheManager;
         }
 
         public async Task<List<UserInfo>> GetUserInfo()
         {
-           return await _userInfoRepository.GetUserInfoAsync();
+            List<UserInfo>? userInfoList = new();
+            userInfoList = _cacheManager.GetFromCache(CacheKeys.USERINFO_LIST);
+            if (userInfoList != null)
+            {
+                return userInfoList;
+            }
+
+            userInfoList = await _userInfoRepository.GetUserInfoAsync();
+            
+            if (userInfoList.Count > 0)
+            {
+                var options = _cacheManager.GenerateMemoryCacheEntryOptions(TimeSpan.FromMinutes(1), TimeSpan.FromDays(1));
+                _cacheManager.SetToCache(CacheKeys.USERINFO_LIST, userInfoList, options);
+            }
+
+            return userInfoList.ToList();
         }
 
         public async Task<int> AddUserInfo(AddOrUpdateUserInfoRequest request)
@@ -32,11 +49,13 @@ namespace UserInfoService.Core.Managers
             UserInfo userInfo = new() { Name = request.Name, Address = request.Address };
             int id = await _userInfoRepository.AddUserInfoAsync(userInfo);
 
+            _cacheManager.RemoveFromCache(CacheKeys.USERINFO_LIST);
+
             return id;
         }
 
         public async Task UpdateUserInfo(AddOrUpdateUserInfoRequest request, int id)
-        {            
+        {
             if (await _userInfoRepository.GetUserInfoByIdAsync(id) == null)
             {
                 throw new InValidRequestDataException(INVALID_ID_ERR_MSG, (int)HttpStatusCode.NotFound);
@@ -49,6 +68,8 @@ namespace UserInfoService.Core.Managers
 
             UserInfo userInfo = new() { Id = id, Name = request.Name, Address = request.Address };
             await _userInfoRepository.UpdateUserInfoAsync(userInfo, id);
+
+            _cacheManager.RemoveFromCache(CacheKeys.USERINFO_LIST);
         }
 
         public async Task DeleteUserInfo(int id)
@@ -59,6 +80,8 @@ namespace UserInfoService.Core.Managers
             }
 
             await _userInfoRepository.DeleteUserInfoAsync(id);
+
+            _cacheManager.RemoveFromCache(CacheKeys.USERINFO_LIST);
         }
     }
 }
