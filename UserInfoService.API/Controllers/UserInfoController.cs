@@ -1,6 +1,7 @@
 ﻿using UserInfoService.Core.Managers;
-using UserInfoService.Core.Models;
+using UserInfoService.Core.Dto;
 using Microsoft.AspNetCore.Mvc;
+using UserInfoService.Core.Models;
 
 namespace IdentityDataService.API.Controllers
 {

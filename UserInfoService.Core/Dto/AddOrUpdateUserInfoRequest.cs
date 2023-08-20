@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace UserInfoService.Core.Models
+namespace UserInfoService.Core.Dto
 {
     public class AddOrUpdateUserInfoRequest
     {
