@@ -19,6 +19,11 @@ namespace UserInfoService.Infrastructure.Repositories
             return await _userInfoDbContext.UserInfo.ToListAsync();
         }
 
+        public async Task<UserInfo?> GetUserInfoByIdAsync(int id)
+        {
+            return await _userInfoDbContext.UserInfo.FindAsync(id);
+        }
+
         public async Task<int> AddUserInfoAsync(UserInfo userInfo)
         {          
             _userInfoDbContext.UserInfo.Add(userInfo);
@@ -47,6 +52,18 @@ namespace UserInfoService.Infrastructure.Repositories
                 _userInfoDbContext.UserInfo.Remove(data);
                 await _userInfoDbContext.SaveChangesAsync();
             }
+        }
+
+        public async Task<bool> IsNameExistsAsync(string name)
+        {
+            UserInfo? data = await _userInfoDbContext.UserInfo.FirstOrDefaultAsync(data => data.Name == name);
+            return data != null;
+        }
+
+        public async Task<bool> IsDifferentDataWithSameNameExistsAsync(string name, int id)
+        {
+            UserInfo? data = await _userInfoDbContext.UserInfo.FirstOrDefaultAsync(data => data.Name == name && data.Id != id);
+            return data != null;
         }
 
     }
