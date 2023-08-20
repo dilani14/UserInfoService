@@ -2,6 +2,7 @@
 using UserInfoService.Core.Models;
 using System.Net;
 using UserInfoService.Core.Exceptions;
+using UserInfoService.Core.Dto;
 
 namespace UserInfoService.Core.Managers
 {
@@ -41,7 +42,7 @@ namespace UserInfoService.Core.Managers
 
         public async Task<int> AddUserInfo(AddOrUpdateUserInfoRequest request)
         {
-            if (await _userInfoRepository.IsNameExistsAsync(request.Name))
+            if (!await _userInfoRepository.IsNameExistsAsync(request.Name))
             {
                 throw new InValidRequestDataException(INVALID_NAME_ERR_MSG, (int)HttpStatusCode.BadRequest);
             }
@@ -56,7 +57,7 @@ namespace UserInfoService.Core.Managers
 
         public async Task UpdateUserInfo(AddOrUpdateUserInfoRequest request, int id)
         {
-            if (await _userInfoRepository.IsUserInfoExistsAsync(id))
+            if (!await _userInfoRepository.IsUserInfoExistsAsync(id))
             {
                 throw new InValidRequestDataException(INVALID_ID_ERR_MSG, (int)HttpStatusCode.NotFound);
             }
@@ -79,7 +80,7 @@ namespace UserInfoService.Core.Managers
 
         public async Task DeleteUserInfo(int id)
         {
-            if (await _userInfoRepository.IsUserInfoExistsAsync(id))
+            if (!await _userInfoRepository.IsUserInfoExistsAsync(id))
             {
                 throw new InValidRequestDataException(INVALID_ID_ERR_MSG, (int)HttpStatusCode.NotFound);
             }
