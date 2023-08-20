@@ -30,7 +30,7 @@ namespace UserInfoService.Core.Managers
             }
 
             userInfoList = await _userInfoRepository.GetUserInfoAsync();
-            
+
             if (userInfoList.Count > 0)
             {
                 var options = _cacheManager.GenerateMemoryCacheEntryOptions(TimeSpan.FromMinutes(1), TimeSpan.FromDays(1));
@@ -62,9 +62,9 @@ namespace UserInfoService.Core.Managers
                 throw new InValidRequestDataException(INVALID_ID_ERR_MSG, (int)HttpStatusCode.NotFound);
             }
 
-            string nameBeforeUpdate = await _userInfoRepository.GetUserNameByIdAsync(id);
+            string currentName = await _userInfoRepository.GetUserNameByIdAsync(id);
             // Check whether name field is getting updated
-            if(nameBeforeUpdate != request.Name)
+            if (currentName != request.Name)
             {
                 if (await _userInfoRepository.IsNameExistsAsync(request.Name))
                 {

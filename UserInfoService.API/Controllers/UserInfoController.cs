@@ -25,7 +25,7 @@ namespace IdentityDataService.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddIdentityData([FromBody]AddOrUpdateUserInfoRequest request)
+        public async Task<IActionResult> AddIdentityData([FromBody] AddOrUpdateUserInfoRequest request)
         {
             int id = await _userInfoManager.AddUserInfo(request);
 
@@ -33,15 +33,15 @@ namespace IdentityDataService.API.Controllers
         }
 
         [Route("{id}"), HttpPut]
-        public async Task<IActionResult> UpdateIdentityData([FromRoute]int id, [FromBody]AddOrUpdateUserInfoRequest request)
+        public async Task<IActionResult> UpdateIdentityData([FromRoute] int id, [FromBody] AddOrUpdateUserInfoRequest request)
         {
             await _userInfoManager.UpdateUserInfo(request, id);
-            
+
             return NoContent();
         }
 
         [Route("{id}"), HttpDelete]
-        public async Task<IActionResult> DeleteIdentityData([FromRoute]int id)
+        public async Task<IActionResult> DeleteIdentityData([FromRoute] int id)
         {
             await _userInfoManager.DeleteUserInfo(id);
 

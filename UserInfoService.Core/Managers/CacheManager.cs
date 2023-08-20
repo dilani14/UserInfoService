@@ -14,7 +14,7 @@ namespace UserInfoService.Core.Managers
 
         public T? GetFromCache(string key)
         {
-           _cache.TryGetValue(key, out T? value);
+            _cache.TryGetValue(key, out T? value);
             return value;
         }
 
@@ -24,11 +24,11 @@ namespace UserInfoService.Core.Managers
         }
 
         public void SetToCache(string key, T objectToBeCached, MemoryCacheEntryOptions cachingOption)
-        {      
+        {
             _cache.Set(key, objectToBeCached, cachingOption);
         }
 
-        public MemoryCacheEntryOptions GenerateMemoryCacheEntryOptions(TimeSpan slidingExpiration, TimeSpan absoluteExpiration, 
+        public MemoryCacheEntryOptions GenerateMemoryCacheEntryOptions(TimeSpan slidingExpiration, TimeSpan absoluteExpiration,
             CacheItemPriority priority)
         {
             return new MemoryCacheEntryOptions()
