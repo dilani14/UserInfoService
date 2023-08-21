@@ -42,7 +42,7 @@ namespace UserInfoService.Core.Managers
 
         public async Task<int> AddUserInfo(AddOrUpdateUserInfoRequest request)
         {
-            if (!await _userInfoRepository.IsNameExistsAsync(request.Name))
+            if (await _userInfoRepository.IsNameExistsAsync(request.Name))
             {
                 throw new InValidRequestDataException(INVALID_NAME_ERR_MSG, (int)HttpStatusCode.BadRequest);
             }
@@ -72,7 +72,7 @@ namespace UserInfoService.Core.Managers
                 }
             }
 
-            UserInfo userInfo = new() { Id = id, Name = request.Name, Address = request.Address };
+            UserInfo userInfo = new() { Name = request.Name, Address = request.Address };
             await _userInfoRepository.UpdateUserInfoAsync(userInfo, id);
 
             _cacheManager.RemoveFromCache(CacheKeys.USERINFO_LIST);
