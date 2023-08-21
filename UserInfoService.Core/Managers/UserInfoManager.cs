@@ -3,6 +3,7 @@ using UserInfoService.Core.Models;
 using System.Net;
 using UserInfoService.Core.Exceptions;
 using UserInfoService.Core.Dto;
+using Microsoft.Extensions.Logging;
 
 namespace UserInfoService.Core.Managers
 {
@@ -13,19 +14,24 @@ namespace UserInfoService.Core.Managers
 
         private readonly IUserInfoRepository _userInfoRepository;
         private readonly ICacheManager<List<UserInfo>> _cacheManager;
+        private readonly ILogger<UserInfoManager> _logger;
 
-        public UserInfoManager(IUserInfoRepository userInfoRepository, ICacheManager<List<UserInfo>> cacheManager)
+        public UserInfoManager(IUserInfoRepository userInfoRepository, ICacheManager<List<UserInfo>> cacheManager, ILogger<UserInfoManager> logger)
         {
             _userInfoRepository = userInfoRepository;
             _cacheManager = cacheManager;
+            _logger = logger;
         }
 
         public async Task<List<UserInfo>> GetUserInfo()
         {
+            _logger.LogInformation("Info : Start GetUserInfo");
+
             List<UserInfo>? userInfoList = new();
             userInfoList = _cacheManager.GetFromCache(CacheKeys.USERINFO_LIST);
             if (userInfoList != null)
             {
+                _logger.LogInformation("Info : End GetUserInfo, Return from cache");
                 return userInfoList;
             }
 
@@ -37,11 +43,14 @@ namespace UserInfoService.Core.Managers
                 _cacheManager.SetToCache(CacheKeys.USERINFO_LIST, userInfoList, options);
             }
 
+            _logger.LogInformation("Info : End GetUserInfo, Return from repository");
             return userInfoList.ToList();
         }
 
         public async Task<int> AddUserInfo(AddOrUpdateUserInfoRequest request)
         {
+            _logger.LogInformation("Info : Start AddUserInfo");
+
             if (await _userInfoRepository.IsNameExistsAsync(request.Name))
             {
                 throw new InValidRequestDataException(INVALID_NAME_ERR_MSG, (int)HttpStatusCode.BadRequest);
@@ -52,11 +61,15 @@ namespace UserInfoService.Core.Managers
 
             _cacheManager.RemoveFromCache(CacheKeys.USERINFO_LIST);
 
+            _logger.LogInformation("Info : End AddUserInfo");
+
             return id;
         }
 
         public async Task UpdateUserInfo(AddOrUpdateUserInfoRequest request, int id)
         {
+            _logger.LogInformation("Info : Start UpdateUserInfo"); 
+
             if (!await _userInfoRepository.IsUserInfoExistsAsync(id))
             {
                 throw new InValidRequestDataException(INVALID_ID_ERR_MSG, (int)HttpStatusCode.NotFound);
@@ -76,10 +89,14 @@ namespace UserInfoService.Core.Managers
             await _userInfoRepository.UpdateUserInfoAsync(userInfo, id);
 
             _cacheManager.RemoveFromCache(CacheKeys.USERINFO_LIST);
+
+            _logger.LogInformation("Info : End UpdateUserInfo");
         }
 
         public async Task DeleteUserInfo(int id)
         {
+            _logger.LogInformation("Info : Start DeleteUserInfo");
+
             if (!await _userInfoRepository.IsUserInfoExistsAsync(id))
             {
                 throw new InValidRequestDataException(INVALID_ID_ERR_MSG, (int)HttpStatusCode.NotFound);
@@ -88,6 +105,8 @@ namespace UserInfoService.Core.Managers
             await _userInfoRepository.DeleteUserInfoAsync(id);
 
             _cacheManager.RemoveFromCache(CacheKeys.USERINFO_LIST);
+
+            _logger.LogInformation("Info : End DeleteUserInfo");
         }
     }
 }
