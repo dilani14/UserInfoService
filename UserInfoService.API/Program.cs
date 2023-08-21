@@ -1,3 +1,4 @@
+using UserInfoService.API.Middleware;
 using UserInfoService.Core;
 using UserInfoService.Infrastructure;
 
@@ -22,7 +23,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseExceptionHandler("/error");
+app.UseMiddleware<ExceptionHandler>();
 
 app.UseHttpsRedirection();
 
