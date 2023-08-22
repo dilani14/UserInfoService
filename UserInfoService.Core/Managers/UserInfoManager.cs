@@ -16,6 +16,10 @@ namespace UserInfoService.Core.Managers
         private readonly ICacheManager<List<UserInfo>> _cacheManager;
         private readonly ILogger<UserInfoManager> _logger;
 
+        private const int initialRequestCount = 1;
+        private const int maxRequestCount = 1;
+        private static SemaphoreSlim semaphoreSlim = new SemaphoreSlim(initialRequestCount, maxRequestCount);
+
         public UserInfoManager(IUserInfoRepository userInfoRepository, ICacheManager<List<UserInfo>> cacheManager, ILogger<UserInfoManager> logger)
         {
             _userInfoRepository = userInfoRepository;
@@ -25,13 +29,12 @@ namespace UserInfoService.Core.Managers
 
         public async Task<List<UserInfo>> GetUserInfo()
         {
-            _logger.LogInformation("Info : Start GetUserInfo");
+            _logger.LogInformation("Start - Fetching the list of users");
 
-            List<UserInfo>? userInfoList = new();
-            userInfoList = _cacheManager.GetFromCache(CacheKeys.USERINFO_LIST);
+            List<UserInfo>? userInfoList = _cacheManager.GetFromCache(CacheKeys.USERINFO_LIST);
             if (userInfoList != null)
             {
-                _logger.LogInformation("Info : End GetUserInfo, Return from cache");
+                _logger.LogInformation("End - User list Return from cache");
                 return userInfoList;
             }
 
@@ -43,59 +46,79 @@ namespace UserInfoService.Core.Managers
                 _cacheManager.SetToCache(CacheKeys.USERINFO_LIST, userInfoList, options);
             }
 
-            _logger.LogInformation("Info : End GetUserInfo, Return from repository");
+            _logger.LogInformation("End - User list Return from database");
             return userInfoList.ToList();
         }
 
         public async Task<int> AddUserInfo(AddOrUpdateUserInfoRequest request)
         {
-            _logger.LogInformation("Info : Start AddUserInfo");
+            await semaphoreSlim.WaitAsync();
 
-            if (await _userInfoRepository.IsNameExistsAsync(request.Name))
+            _logger.LogInformation("Start - Adding a user");
+
+            try
             {
-                throw new InValidRequestDataException(INVALID_NAME_ERR_MSG, (int)HttpStatusCode.BadRequest);
+                if (await _userInfoRepository.IsNameExistsAsync(request.Name))
+                {
+                    throw new InValidRequestDataException(INVALID_NAME_ERR_MSG, (int)HttpStatusCode.BadRequest);
+                }
+
+                UserInfo userInfo = new() { Name = request.Name, Address = request.Address };
+                int id = await _userInfoRepository.AddUserInfoAsync(userInfo);
+
+                _cacheManager.RemoveFromCache(CacheKeys.USERINFO_LIST);
+
+                _logger.LogInformation("End - Adding a user");
+
+                return id;
+            }
+            finally
+            {
+                semaphoreSlim.Release();
             }
 
-            UserInfo userInfo = new() { Name = request.Name, Address = request.Address };
-            int id = await _userInfoRepository.AddUserInfoAsync(userInfo);
-
-            _cacheManager.RemoveFromCache(CacheKeys.USERINFO_LIST);
-
-            _logger.LogInformation("Info : End AddUserInfo");
-
-            return id;
         }
 
         public async Task UpdateUserInfo(AddOrUpdateUserInfoRequest request, int id)
         {
-            _logger.LogInformation("Info : Start UpdateUserInfo"); 
+            _logger.LogInformation("Start - Updating a user");
 
             if (!await _userInfoRepository.IsUserInfoExistsAsync(id))
             {
                 throw new InValidRequestDataException(INVALID_ID_ERR_MSG, (int)HttpStatusCode.NotFound);
             }
 
-            string currentName = await _userInfoRepository.GetUserNameByIdAsync(id);
-            // Check whether name field is getting updated
-            if (currentName != request.Name)
+            await semaphoreSlim.WaitAsync();
+
+            try
             {
-                if (await _userInfoRepository.IsNameExistsAsync(request.Name))
+                string currentName = await _userInfoRepository.GetUserNameByIdAsync(id);
+                // Check whether name field is getting updated
+                if (currentName != request.Name)
                 {
-                    throw new InValidRequestDataException(INVALID_NAME_ERR_MSG, (int)HttpStatusCode.BadRequest);
+                    if (await _userInfoRepository.IsNameExistsAsync(request.Name))
+                    {
+                        throw new InValidRequestDataException(INVALID_NAME_ERR_MSG, (int)HttpStatusCode.BadRequest);
+                    }
                 }
+
+                UserInfo userInfo = new() { Name = request.Name, Address = request.Address };
+                await _userInfoRepository.UpdateUserInfoAsync(userInfo, id);
+
+                _cacheManager.RemoveFromCache(CacheKeys.USERINFO_LIST);
+
+                _logger.LogInformation("End - Updating a user");
+            } 
+            finally 
+            { 
+                semaphoreSlim.Release();
             }
-
-            UserInfo userInfo = new() { Name = request.Name, Address = request.Address };
-            await _userInfoRepository.UpdateUserInfoAsync(userInfo, id);
-
-            _cacheManager.RemoveFromCache(CacheKeys.USERINFO_LIST);
-
-            _logger.LogInformation("Info : End UpdateUserInfo");
+            
         }
 
         public async Task DeleteUserInfo(int id)
         {
-            _logger.LogInformation("Info : Start DeleteUserInfo");
+            _logger.LogInformation("Start - Deleteing a user");
 
             if (!await _userInfoRepository.IsUserInfoExistsAsync(id))
             {
@@ -106,7 +129,7 @@ namespace UserInfoService.Core.Managers
 
             _cacheManager.RemoveFromCache(CacheKeys.USERINFO_LIST);
 
-            _logger.LogInformation("Info : End DeleteUserInfo");
+            _logger.LogInformation("End - Deleteing a user");
         }
     }
 }
