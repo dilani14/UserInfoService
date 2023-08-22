@@ -4,6 +4,7 @@ using System.Net;
 using UserInfoService.Core.Exceptions;
 using UserInfoService.Core.Dto;
 using Microsoft.Extensions.Logging;
+using UserInfoService.Core.Helpers;
 
 namespace UserInfoService.Core.Managers
 {
@@ -63,7 +64,7 @@ namespace UserInfoService.Core.Managers
                     throw new InValidRequestDataException(INVALID_NAME_ERR_MSG, (int)HttpStatusCode.BadRequest);
                 }
 
-                UserInfo userInfo = new() { Name = request.Name, Address = request.Address };
+                UserInfo userInfo = ObjectMapper.Mapper.Map<UserInfo>(request);
                 int id = await _userInfoRepository.AddUserInfoAsync(userInfo);
 
                 _cacheManager.RemoveFromCache(CacheKeys.USERINFO_LIST);
@@ -102,7 +103,7 @@ namespace UserInfoService.Core.Managers
                     }
                 }
 
-                UserInfo userInfo = new() { Name = request.Name, Address = request.Address };
+                UserInfo userInfo = ObjectMapper.Mapper.Map<UserInfo>(request);
                 await _userInfoRepository.UpdateUserInfoAsync(userInfo, id);
 
                 _cacheManager.RemoveFromCache(CacheKeys.USERINFO_LIST);
