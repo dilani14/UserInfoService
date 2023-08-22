@@ -32,7 +32,7 @@ namespace UserInfoService.Core.Managers
         {
             _logger.LogInformation("Start - Fetching the list of users");
 
-            List<UserInfo>? userInfoList = _cacheManager.GetFromCache(CacheKeys.USERINFO_LIST);
+            List<UserInfo>? userInfoList = _cacheManager.Get(CacheKeys.USERINFO_LIST);
             if (userInfoList != null)
             {
                 _logger.LogInformation("End - User list Return from cache");
@@ -44,7 +44,7 @@ namespace UserInfoService.Core.Managers
             if (userInfoList.Count > 0)
             {
                 var options = _cacheManager.GenerateMemoryCacheEntryOptions(TimeSpan.FromMinutes(1), TimeSpan.FromDays(1));
-                _cacheManager.SetToCache(CacheKeys.USERINFO_LIST, userInfoList, options);
+                _cacheManager.Set(CacheKeys.USERINFO_LIST, userInfoList, options);
             }
 
             _logger.LogInformation("End - User list Return from database");
@@ -67,7 +67,7 @@ namespace UserInfoService.Core.Managers
                 UserInfo userInfo = ObjectMapper.Mapper.Map<UserInfo>(request);
                 int id = await _userInfoRepository.AddUserInfoAsync(userInfo);
 
-                _cacheManager.RemoveFromCache(CacheKeys.USERINFO_LIST);
+                _cacheManager.Remove(CacheKeys.USERINFO_LIST);
 
                 _logger.LogInformation("End - Adding a user");
 
@@ -106,7 +106,7 @@ namespace UserInfoService.Core.Managers
                 UserInfo userInfo = ObjectMapper.Mapper.Map<UserInfo>(request);
                 await _userInfoRepository.UpdateUserInfoAsync(userInfo, id);
 
-                _cacheManager.RemoveFromCache(CacheKeys.USERINFO_LIST);
+                _cacheManager.Remove(CacheKeys.USERINFO_LIST);
 
                 _logger.LogInformation("End - Updating a user");
             } 
@@ -128,7 +128,7 @@ namespace UserInfoService.Core.Managers
 
             await _userInfoRepository.DeleteUserInfoAsync(id);
 
-            _cacheManager.RemoveFromCache(CacheKeys.USERINFO_LIST);
+            _cacheManager.Remove(CacheKeys.USERINFO_LIST);
 
             _logger.LogInformation("End - Deleteing a user");
         }

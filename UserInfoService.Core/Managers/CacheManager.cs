@@ -12,18 +12,18 @@ namespace UserInfoService.Core.Managers
             _cache = memoryCache;
         }
 
-        public T? GetFromCache(string key)
+        public T? Get(string key)
         {
             _cache.TryGetValue(key, out T? value);
             return value;
         }
 
-        public void RemoveFromCache(string key)
+        public void Remove(string key)
         {
             _cache.Remove(key);
         }
 
-        public void SetToCache(string key, T objectToBeCached, MemoryCacheEntryOptions cachingOption)
+        public void Set(string key, T objectToBeCached, MemoryCacheEntryOptions cachingOption)
         {
             _cache.Set(key, objectToBeCached, cachingOption);
         }

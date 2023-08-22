@@ -35,7 +35,7 @@ namespace UserInfoService.Core.Test
             List<UserInfo> userInfosCache = null;
 
             _mockRepository.Setup(m => m.GetUserInfoAsync()).ReturnsAsync(UserInfoList());
-            _mockCacheManager.Setup(m => m.GetFromCache(It.IsAny<string>())).Returns(userInfosCache);
+            _mockCacheManager.Setup(m => m.Get(It.IsAny<string>())).Returns(userInfosCache);
 
             UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object, _mockLogger.Object);
 
@@ -55,11 +55,11 @@ namespace UserInfoService.Core.Test
 
             _mockRepository.Setup(m => m.GetUserInfoAsync()).ReturnsAsync(UserInfoList());
            
-            _mockCacheManager.Setup(m => m.GetFromCache(It.IsAny<string>())).Returns(userInfosCache);
+            _mockCacheManager.Setup(m => m.Get(It.IsAny<string>())).Returns(userInfosCache);
             _mockCacheManager.Setup(m => 
                 m.GenerateMemoryCacheEntryOptions(It.IsAny<TimeSpan>(), It.IsAny<TimeSpan>(), It.IsAny<CacheItemPriority>()))
                 .Returns(options);
-            _mockCacheManager.Setup(m => m.SetToCache(It.IsAny<string>(), It.IsAny<List<UserInfo>>(), It.IsAny<MemoryCacheEntryOptions>()));
+            _mockCacheManager.Setup(m => m.Set(It.IsAny<string>(), It.IsAny<List<UserInfo>>(), It.IsAny<MemoryCacheEntryOptions>()));
 
             UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object, _mockLogger.Object);
 
@@ -67,7 +67,7 @@ namespace UserInfoService.Core.Test
             await manager.GetUserInfo();
 
             //Assert
-            _mockCacheManager.Verify(m => m.SetToCache(CacheKeys.USERINFO_LIST,
+            _mockCacheManager.Verify(m => m.Set(CacheKeys.USERINFO_LIST,
                 It.IsAny<List<UserInfo>>(), options), Times.Once());
         }
 
@@ -80,7 +80,7 @@ namespace UserInfoService.Core.Test
 
             _mockRepository.Setup(m => m.GetUserInfoAsync()).ReturnsAsync(new List<UserInfo>());
 
-            _mockCacheManager.Setup(m => m.GetFromCache(It.IsAny<string>())).Returns(userInfos);
+            _mockCacheManager.Setup(m => m.Get(It.IsAny<string>())).Returns(userInfos);
 
             UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object, _mockLogger.Object);
 
@@ -88,7 +88,7 @@ namespace UserInfoService.Core.Test
             await manager.GetUserInfo();
 
             //Assert
-            _mockCacheManager.Verify(m => m.SetToCache(CacheKeys.USERINFO_LIST, It.IsAny<List<UserInfo>>(), options), Times.Never());
+            _mockCacheManager.Verify(m => m.Set(CacheKeys.USERINFO_LIST, It.IsAny<List<UserInfo>>(), options), Times.Never());
         }
 
         [Fact]
@@ -99,7 +99,7 @@ namespace UserInfoService.Core.Test
 
             _mockRepository.Setup(m => m.GetUserInfoAsync()).ReturnsAsync(UserInfoList());
 
-            _mockCacheManager.Setup(m => m.GetFromCache(It.IsAny<string>())).Returns(userInfos);
+            _mockCacheManager.Setup(m => m.Get(It.IsAny<string>())).Returns(userInfos);
 
             UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object, _mockLogger.Object);
 
@@ -116,7 +116,7 @@ namespace UserInfoService.Core.Test
             //Arrange
             List<UserInfo> userInfoList = UserInfoList();
 
-            _mockCacheManager.Setup(m => m.GetFromCache(It.IsAny<string>())).Returns(userInfoList);
+            _mockCacheManager.Setup(m => m.Get(It.IsAny<string>())).Returns(userInfoList);
 
             UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object, _mockLogger.Object);
 
@@ -131,7 +131,7 @@ namespace UserInfoService.Core.Test
         public async Task GetUserInfo_CacheIsNotEmpty_ReturnsUserInfoFromCache()
         {
             //Arrange
-            _mockCacheManager.Setup(m => m.GetFromCache(It.IsAny<string>())).Returns(UserInfoList());
+            _mockCacheManager.Setup(m => m.Get(It.IsAny<string>())).Returns(UserInfoList());
 
             UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object, _mockLogger.Object);
 
@@ -164,7 +164,7 @@ namespace UserInfoService.Core.Test
         {
             // Arrange
             int id = 1;
-            AddOrUpdateUserInfoRequest request = new() { Name = "Omega Solutions", Address = "21, Fitzgibson St, London, ON" };
+            AddOrUpdateUserInfoRequest request = GetAddOrUpdateRequest();
 
             _mockRepository.Setup(m => m.IsNameExistsAsync(It.IsAny<string>())).ReturnsAsync(false);
             _mockRepository.Setup(m => m.AddUserInfoAsync(It.IsAny<UserInfo>())).ReturnsAsync(id);
@@ -187,7 +187,7 @@ namespace UserInfoService.Core.Test
         {
             // Arrange
             int id = 1;
-            AddOrUpdateUserInfoRequest request = new() { Name = "Omega Solutions", Address = "21, Fitzgibson St, London, ON" };
+            AddOrUpdateUserInfoRequest request = GetAddOrUpdateRequest();
 
             _mockRepository.Setup(m => m.IsUserInfoExistsAsync(It.IsAny<int>())).ReturnsAsync(false);
 
@@ -205,7 +205,7 @@ namespace UserInfoService.Core.Test
         {
             // Arrange
             int id = 1;
-            AddOrUpdateUserInfoRequest request = new() { Name = "Omega Solutions", Address = "21, Fitzgibson St, London, ON" };
+            AddOrUpdateUserInfoRequest request = GetAddOrUpdateRequest();
 
             _mockRepository.Setup(m => m.IsUserInfoExistsAsync(It.IsAny<int>())).ReturnsAsync(true);
             _mockRepository.Setup(m => m.IsNameExistsAsync(It.IsAny<string>())).ReturnsAsync(true);
@@ -224,7 +224,7 @@ namespace UserInfoService.Core.Test
         {
             // Arrange
             int id = 1;
-            AddOrUpdateUserInfoRequest request = new() { Name = "Omega Solutions", Address = "21, Fitzgibson St, London, ON" };
+            AddOrUpdateUserInfoRequest request = GetAddOrUpdateRequest();
 
             _mockRepository.Setup(m => m.IsUserInfoExistsAsync(It.IsAny<int>())).ReturnsAsync(true);
             _mockRepository.Setup(m => m.IsNameExistsAsync(It.IsAny<string>())).ReturnsAsync(false);
@@ -305,6 +305,11 @@ namespace UserInfoService.Core.Test
                .SetSlidingExpiration(TimeSpan.FromMinutes(1))
                .SetAbsoluteExpiration(TimeSpan.FromDays(1))
                .SetPriority(CacheItemPriority.Normal);
+        }
+
+        private AddOrUpdateUserInfoRequest GetAddOrUpdateRequest()
+        {
+            return new() { Name = "Omega Solutions", Address = "21, Fitzgibson St, London, ON" };
         }
         #endregion
     }
