@@ -11,7 +11,7 @@ namespace UserInfoService.Core.Managers
     public class UserInfoManager
     {
         private readonly static string INVALID_NAME_ERR_MSG = "An entry with the identical name already exists. Please select a different name.";
-        private readonly static string INVALID_ID_ERR_MSG = "The provided Id does not have associated IdentityData. Please provide a valid Id.";
+        private readonly static string INVALID_ID_ERR_MSG = "The provided Id does not have associated User Information. Please provide a valid Id.";
 
         private readonly IUserInfoRepository _userInfoRepository;
         private readonly ICacheManager<List<UserInfo>> _cacheManager;
