@@ -1,6 +1,6 @@
 # UserInfoService
 
-This repository contains a sample .NET 6 Web API project handling user informatiom. It demonstrates best practices for structuring, designing, and implementing a Web API using .NET 6.
+This repository contains a sample .NET 6 Web API project handling user information using clean architecture.
 
 ## Prerequisites
 
