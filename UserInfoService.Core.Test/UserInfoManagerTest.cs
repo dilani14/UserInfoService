@@ -1,4 +1,5 @@
-﻿using Moq;
+﻿using Xunit;
+using Moq;
 using FluentAssertions;
 using UserInfoService.Core.Interfaces;
 using UserInfoService.Core.Managers;
@@ -6,6 +7,7 @@ using UserInfoService.Core.Models;
 using Microsoft.Extensions.Caching.Memory;
 using UserInfoService.Core.Exceptions;
 using UserInfoService.Core.Dto;
+using Microsoft.Extensions.Logging;
 
 namespace UserInfoService.Core.Test
 {
@@ -16,11 +18,13 @@ namespace UserInfoService.Core.Test
 
         private readonly Mock<IUserInfoRepository> _mockRepository;
         private readonly Mock<ICacheManager<List<UserInfo>>> _mockCacheManager;
+        private readonly Mock<ILogger<UserInfoManager>> _mockLogger;
         
         public UserInfoManagerTest()
         {
             _mockRepository =  new Mock<IUserInfoRepository>();
             _mockCacheManager = new Mock<ICacheManager<List<UserInfo>>>();
+            _mockLogger = new Mock<ILogger<UserInfoManager>>();
         }
 
         #region GetUserInfo
@@ -30,10 +34,10 @@ namespace UserInfoService.Core.Test
             //Arrange
             List<UserInfo> userInfosCache = null;
 
-            _mockRepository.Setup(m => m.GetUserInfoAsync()).ReturnsAsync(UserInfoListFromRepository());
+            _mockRepository.Setup(m => m.GetUserInfoAsync()).ReturnsAsync(UserInfoList());
             _mockCacheManager.Setup(m => m.GetFromCache(It.IsAny<string>())).Returns(userInfosCache);
 
-            UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object);
+            UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object, _mockLogger.Object);
 
             //Act
             await manager.GetUserInfo();
@@ -49,7 +53,7 @@ namespace UserInfoService.Core.Test
             List<UserInfo> userInfosCache = null;
             MemoryCacheEntryOptions options = GetOptions();
 
-            _mockRepository.Setup(m => m.GetUserInfoAsync()).ReturnsAsync(UserInfoListFromRepository());
+            _mockRepository.Setup(m => m.GetUserInfoAsync()).ReturnsAsync(UserInfoList());
            
             _mockCacheManager.Setup(m => m.GetFromCache(It.IsAny<string>())).Returns(userInfosCache);
             _mockCacheManager.Setup(m => 
@@ -57,7 +61,7 @@ namespace UserInfoService.Core.Test
                 .Returns(options);
             _mockCacheManager.Setup(m => m.SetToCache(It.IsAny<string>(), It.IsAny<List<UserInfo>>(), It.IsAny<MemoryCacheEntryOptions>()));
 
-            UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object);
+            UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object, _mockLogger.Object);
 
             //Act
             await manager.GetUserInfo();
@@ -78,7 +82,7 @@ namespace UserInfoService.Core.Test
 
             _mockCacheManager.Setup(m => m.GetFromCache(It.IsAny<string>())).Returns(userInfos);
 
-            UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object);
+            UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object, _mockLogger.Object);
 
             //Act
             await manager.GetUserInfo();
@@ -93,28 +97,28 @@ namespace UserInfoService.Core.Test
             //Arrange
             List<UserInfo>? userInfos = null;
 
-            _mockRepository.Setup(m => m.GetUserInfoAsync()).ReturnsAsync(UserInfoListFromRepository());
+            _mockRepository.Setup(m => m.GetUserInfoAsync()).ReturnsAsync(UserInfoList());
 
             _mockCacheManager.Setup(m => m.GetFromCache(It.IsAny<string>())).Returns(userInfos);
 
-            UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object);
+            UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object, _mockLogger.Object);
 
             //Act
             List<UserInfo> actual = await manager.GetUserInfo();
 
             //Assert
-            actual.Should().BeEquivalentTo(UserInfoListFromRepository());
+            actual.Should().BeEquivalentTo(UserInfoList());
         }
 
         [Fact]
         public async Task GetUserInfo_CacheIsNotEmpty_NeverCallsGetUserInfoAsync()
         {
             //Arrange
-            List<UserInfo> userInfoList = UserInfoListFromRepository();
+            List<UserInfo> userInfoList = UserInfoList();
 
             _mockCacheManager.Setup(m => m.GetFromCache(It.IsAny<string>())).Returns(userInfoList);
 
-            UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object);
+            UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object, _mockLogger.Object);
 
             //Act
             await manager.GetUserInfo();
@@ -127,15 +131,15 @@ namespace UserInfoService.Core.Test
         public async Task GetUserInfo_CacheIsNotEmpty_ReturnsUserInfoFromCache()
         {
             //Arrange
-            _mockCacheManager.Setup(m => m.GetFromCache(It.IsAny<string>())).Returns(UserInfoListFromCache());
+            _mockCacheManager.Setup(m => m.GetFromCache(It.IsAny<string>())).Returns(UserInfoList());
 
-            UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object);
+            UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object, _mockLogger.Object);
 
             //Act
             List<UserInfo> actual = await manager.GetUserInfo();
 
             //Assert
-            actual.Should().BeEquivalentTo(UserInfoListFromCache());
+            actual.Should().BeEquivalentTo(UserInfoList());
         }
         #endregion
 
@@ -146,7 +150,7 @@ namespace UserInfoService.Core.Test
             // Arrange
             _mockRepository.Setup(m => m.IsNameExistsAsync(It.IsAny<string>())).ReturnsAsync(true);
 
-            UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object);
+            UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object, _mockLogger.Object);
 
             // Act
             Func<Task> action = async () => await manager.AddUserInfo(new Dto.AddOrUpdateUserInfoRequest());
@@ -165,7 +169,7 @@ namespace UserInfoService.Core.Test
             _mockRepository.Setup(m => m.IsNameExistsAsync(It.IsAny<string>())).ReturnsAsync(false);
             _mockRepository.Setup(m => m.AddUserInfoAsync(It.IsAny<UserInfo>())).ReturnsAsync(id);
 
-            UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object);
+            UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object, _mockLogger.Object);
 
             // Act
             await manager.AddUserInfo(request);
@@ -187,7 +191,7 @@ namespace UserInfoService.Core.Test
 
             _mockRepository.Setup(m => m.IsUserInfoExistsAsync(It.IsAny<int>())).ReturnsAsync(false);
 
-            UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object);
+            UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object, _mockLogger.Object);
 
             // Act
             Func<Task> action = async () => await manager.UpdateUserInfo(request, id);
@@ -206,7 +210,7 @@ namespace UserInfoService.Core.Test
             _mockRepository.Setup(m => m.IsUserInfoExistsAsync(It.IsAny<int>())).ReturnsAsync(true);
             _mockRepository.Setup(m => m.IsNameExistsAsync(It.IsAny<string>())).ReturnsAsync(true);
 
-            UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object);
+            UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object, _mockLogger.Object);
 
             // Act
             Func<Task> action = async () => await manager.UpdateUserInfo(request, id);
@@ -226,7 +230,7 @@ namespace UserInfoService.Core.Test
             _mockRepository.Setup(m => m.IsNameExistsAsync(It.IsAny<string>())).ReturnsAsync(false);
             _mockRepository.Setup(m => m.UpdateUserInfoAsync(It.IsAny<UserInfo>(), It.IsAny<int>()));
 
-            UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object);
+            UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object, _mockLogger.Object);
 
             // Act
             await manager.UpdateUserInfo(request, id);
@@ -247,7 +251,7 @@ namespace UserInfoService.Core.Test
 
             _mockRepository.Setup(m => m.IsUserInfoExistsAsync(It.IsAny<int>())).ReturnsAsync(false);
 
-            UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object);
+            UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object, _mockLogger.Object);
 
             // Act
             Func<Task> action = async () => await manager.DeleteUserInfo(id);
@@ -264,7 +268,7 @@ namespace UserInfoService.Core.Test
 
             _mockRepository.Setup(m => m.IsUserInfoExistsAsync(It.IsAny<int>())).ReturnsAsync(true);
 
-            UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object);
+            UserInfoManager manager = new UserInfoManager(_mockRepository.Object, _mockCacheManager.Object, _mockLogger.Object);
 
             // Act
             await manager.DeleteUserInfo(id);
@@ -276,7 +280,7 @@ namespace UserInfoService.Core.Test
 
 
         #region Private Methods
-        private List<UserInfo> UserInfoListFromCache()
+        private List<UserInfo> UserInfoList()
         {
             List<UserInfo> userInfoList = new List<UserInfo>();
             userInfoList.Add(new UserInfo
@@ -290,31 +294,6 @@ namespace UserInfoService.Core.Test
                 Id = 2,
                 Name = "gtp LTD",
                 Address = "789, Olive Street, Brampton, ON"
-            });
-
-            return userInfoList;
-        }
-
-        private List<UserInfo> UserInfoListFromRepository()
-        {
-            List<UserInfo> userInfoList = new List<UserInfo>();
-            userInfoList.Add(new UserInfo
-            {
-                Id = 1,
-                Name = "ABC Company",
-                Address = "12, Cambrige Street, Calgery, ON"
-            });
-            userInfoList.Add(new UserInfo
-            {
-                Id = 2,
-                Name = "gtp LTD",
-                Address = "789, Olive Street, Brampton, ON"
-            });
-            userInfoList.Add(new UserInfo
-            {   
-                Id = 3,
-                Name = "xyz Company",
-                Address = "90, Mathew Avenue, Toronto, ON"
             });
 
             return userInfoList;
