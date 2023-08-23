@@ -10,9 +10,6 @@ namespace UserInfoService.Core.Managers
 {
     public class UserInfoManager
     {
-        private readonly static string INVALID_NAME_ERR_MSG = "An entry with the identical name already exists. Please select a different name.";
-        private readonly static string INVALID_ID_ERR_MSG = "The provided Id does not have associated User Information. Please provide a valid Id.";
-
         private readonly IUserInfoRepository _userInfoRepository;
         private readonly ICacheManager<List<UserInfo>> _cacheManager;
         private readonly ILogger<UserInfoManager> _logger;
@@ -63,7 +60,7 @@ namespace UserInfoService.Core.Managers
             {
                 if (await _userInfoRepository.IsNameExistsAsync(request.Name))
                 {
-                    throw new InValidRequestDataException(INVALID_NAME_ERR_MSG, (int)HttpStatusCode.BadRequest);
+                    throw new InValidRequestDataException(ErrorMsg.INVALID_NAME_ERR_MSG, (int)HttpStatusCode.BadRequest);
                 }
 
                 UserInfo userInfo = ObjectMapper.Mapper.Map<UserInfo>(request);
@@ -89,7 +86,7 @@ namespace UserInfoService.Core.Managers
 
             if (!await _userInfoRepository.IsUserInfoExistsAsync(id))
             {
-                throw new InValidRequestDataException(INVALID_ID_ERR_MSG, (int)HttpStatusCode.NotFound);
+                throw new InValidRequestDataException(ErrorMsg.INVALID_ID_ERR_MSG, (int)HttpStatusCode.NotFound);
             }
 
             await semaphoreSlim.WaitAsync();
@@ -103,7 +100,7 @@ namespace UserInfoService.Core.Managers
                 {
                     if (await _userInfoRepository.IsNameExistsAsync(request.Name))
                     {
-                        throw new InValidRequestDataException(INVALID_NAME_ERR_MSG, (int)HttpStatusCode.BadRequest);
+                        throw new InValidRequestDataException(ErrorMsg.INVALID_NAME_ERR_MSG, (int)HttpStatusCode.BadRequest);
                     }
                 }
 
@@ -128,7 +125,7 @@ namespace UserInfoService.Core.Managers
 
             if (!await _userInfoRepository.IsUserInfoExistsAsync(id))
             {
-                throw new InValidRequestDataException(INVALID_ID_ERR_MSG, (int)HttpStatusCode.NotFound);
+                throw new InValidRequestDataException(ErrorMsg.INVALID_ID_ERR_MSG, (int)HttpStatusCode.NotFound);
             }
 
             await _userInfoRepository.DeleteUserInfoAsync(id);

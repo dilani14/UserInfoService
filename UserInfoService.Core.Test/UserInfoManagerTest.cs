@@ -13,9 +13,6 @@ namespace UserInfoService.Core.Test
 {
     public class UserInfoManagerTest
     {
-        private readonly static string INVALID_NAME_ERR_MSG = "An entry with the identical name already exists. Please select a different name.";
-        private readonly static string INVALID_ID_ERR_MSG = "The provided Id does not have associated IdentityData. Please provide a valid Id.";
-
         private readonly Mock<IUserInfoRepository> _mockRepository;
         private readonly Mock<ICacheManager<List<UserInfo>>> _mockCacheManager;
         private readonly Mock<ILogger<UserInfoManager>> _mockLogger;
@@ -156,7 +153,7 @@ namespace UserInfoService.Core.Test
             Func<Task> action = async () => await manager.AddUserInfo(new Dto.AddOrUpdateUserInfoRequest());
 
             // Assert
-            await action.Should().ThrowAsync<InValidRequestDataException>().WithMessage(INVALID_NAME_ERR_MSG);
+            await action.Should().ThrowAsync<InValidRequestDataException>().WithMessage(ErrorMsg.INVALID_NAME_ERR_MSG);
         }
 
         [Fact]
@@ -197,7 +194,7 @@ namespace UserInfoService.Core.Test
             Func<Task> action = async () => await manager.UpdateUserInfo(request, id);
 
             // Assert
-            await action.Should().ThrowAsync<InValidRequestDataException>().WithMessage(INVALID_ID_ERR_MSG);
+            await action.Should().ThrowAsync<InValidRequestDataException>().WithMessage(ErrorMsg.INVALID_ID_ERR_MSG);
         }
 
         [Fact]
@@ -216,7 +213,7 @@ namespace UserInfoService.Core.Test
             Func<Task> action = async () => await manager.UpdateUserInfo(request, id);
 
             // Assert
-            await action.Should().ThrowAsync<InValidRequestDataException>().WithMessage(INVALID_NAME_ERR_MSG);
+            await action.Should().ThrowAsync<InValidRequestDataException>().WithMessage(ErrorMsg.INVALID_NAME_ERR_MSG);
         }
 
         [Fact]
@@ -257,7 +254,7 @@ namespace UserInfoService.Core.Test
             Func<Task> action = async () => await manager.DeleteUserInfo(id);
 
             // Assert
-            await action.Should().ThrowAsync<InValidRequestDataException>().WithMessage(INVALID_ID_ERR_MSG);
+            await action.Should().ThrowAsync<InValidRequestDataException>().WithMessage(ErrorMsg.INVALID_ID_ERR_MSG);
         }
 
         [Fact]
