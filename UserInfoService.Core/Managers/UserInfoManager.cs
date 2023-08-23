@@ -30,12 +30,12 @@ namespace UserInfoService.Core.Managers
 
         public async Task<List<UserInfo>> GetUserInfo()
         {
-            _logger.LogInformation("Start - Fetching the list of users");
+            _logger.LogInformation("Start Fetching the list of users");
 
             List<UserInfo>? userInfoList = _cacheManager.Get(CacheKeys.USERINFO_LIST);
             if (userInfoList != null)
             {
-                _logger.LogInformation("End - User list Return from cache");
+                _logger.LogInformation("End User list Return from cache");
                 return userInfoList;
             }
 
@@ -47,15 +47,17 @@ namespace UserInfoService.Core.Managers
                 _cacheManager.Set(CacheKeys.USERINFO_LIST, userInfoList, options);
             }
 
-            _logger.LogInformation("End - User list Return from database");
+            _logger.LogInformation("End User list Return from database");
             return userInfoList.ToList();
         }
 
         public async Task<int> AddUserInfo(AddOrUpdateUserInfoRequest request)
         {
-            await semaphoreSlim.WaitAsync();
 
-            _logger.LogInformation("Start - Adding a user");
+            _logger.LogInformation($"Start Adding a user with name {request.Name}");
+
+            await semaphoreSlim.WaitAsync();
+            _logger.LogTrace($"Lock obtained for Adding a user with name {request.Name}");
 
             try
             {
@@ -69,20 +71,21 @@ namespace UserInfoService.Core.Managers
 
                 _cacheManager.Remove(CacheKeys.USERINFO_LIST);
 
-                _logger.LogInformation("End - Adding a user");
+                _logger.LogInformation($"End Adding a user with name {request.Name}");
 
                 return id;
             }
             finally
             {
                 semaphoreSlim.Release();
+                _logger.LogTrace($"Lock released for Adding a user with name {request.Name}");
             }
 
         }
 
         public async Task UpdateUserInfo(AddOrUpdateUserInfoRequest request, int id)
         {
-            _logger.LogInformation("Start - Updating a user");
+            _logger.LogInformation($"Start - Updating User Id - {id}");
 
             if (!await _userInfoRepository.IsUserInfoExistsAsync(id))
             {
@@ -90,6 +93,7 @@ namespace UserInfoService.Core.Managers
             }
 
             await semaphoreSlim.WaitAsync();
+            _logger.LogTrace($"Lock obtained for Updating User Id - {id}");
 
             try
             {
@@ -108,18 +112,19 @@ namespace UserInfoService.Core.Managers
 
                 _cacheManager.Remove(CacheKeys.USERINFO_LIST);
 
-                _logger.LogInformation("End - Updating a user");
+                _logger.LogInformation($"End Updating User Id - {id}");
             } 
             finally 
             { 
                 semaphoreSlim.Release();
+                _logger.LogTrace($"Lock released for Updating User Id - {id}");
             }
             
         }
 
         public async Task DeleteUserInfo(int id)
         {
-            _logger.LogInformation("Start - Deleteing a user");
+            _logger.LogInformation($"Start Deleteing User Id - {id}");
 
             if (!await _userInfoRepository.IsUserInfoExistsAsync(id))
             {
@@ -130,7 +135,7 @@ namespace UserInfoService.Core.Managers
 
             _cacheManager.Remove(CacheKeys.USERINFO_LIST);
 
-            _logger.LogInformation("End - Deleteing a user");
+            _logger.LogInformation($"End Deleteing User Id - {id}");
         }
     }
 }
