@@ -3,6 +3,7 @@ using UserInfoService.Core.Interfaces;
 
 namespace UserInfoService.Core.Managers
 {
+    // ToDo : This implementation needs to be moved to the infrastructure layer
     public class CacheManager<T> : ICacheManager<T>
     {
         private readonly IMemoryCache _cache;
